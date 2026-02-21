@@ -1,0 +1,60 @@
+---
+description: Always generate docstrings for functions
+alwaysApply: true
+---
+
+# Function Docstrings
+
+Always add docstrings when creating or modifying functions.
+
+## Requirements
+
+- **Every function** must have a docstring (module/script-level or language-equivalent comment if no native docstring).
+- Describe **what** the function does, **parameters**, and **return value** (and **exceptions** or **side effects** when relevant).
+- Use the **convention for the current language** (e.g., JSDoc for JavaScript/TypeScript, docstring for Python, JSDoc or TSDoc for TS).
+
+## Examples
+
+### Python
+
+```python
+def parse_config(path: str) -> dict:
+    """Load and parse a JSON config file.
+
+    Args:
+        path: File path to the config file.
+
+    Returns:
+        Parsed config as a dictionary.
+
+    Raises:
+        FileNotFoundError: If the file does not exist.
+        ValueError: If the file is not valid JSON.
+    """
+    ...
+```
+
+### JavaScript / TypeScript (JSDoc)
+
+```javascript
+/**
+ * Fetches a user by ID from the API.
+ *
+ * @param {string} userId - The unique user identifier.
+ * @returns {Promise<User>} The user object.
+ * @throws {ApiError} When the request fails or user is not found.
+ */
+async function fetchUser(userId) { ... }
+```
+
+### HTML/script (brief comment when no docstring syntax)
+
+```javascript
+// Returns the current score from the game state.
+function getScore() { ... }
+```
+
+## When editing
+
+- If you add a new function, add a docstring in the same edit.
+- If you change a function’s behavior, parameters, or return value, update its docstring to match.
