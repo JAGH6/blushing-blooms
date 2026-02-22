@@ -3,7 +3,7 @@
  * Requires STRIPE_SECRET_KEY. If not set, returns 503 so the front can show "contact us to complete order".
  */
 
-import { json, corsPreflight } from '../../lib/res.js';
+import { json, corsPreflight } from '../lib/res.js';
 
 export default async function handler(req, res) {
   if (req.method === 'OPTIONS') return corsPreflight(res);
@@ -34,6 +34,7 @@ export default async function handler(req, res) {
   }
 
   const stripe = new Stripe(secret);
+  const origin = req.headers.origin || '';
 
   const sessionConfig = {
     mode: 'payment',
@@ -48,8 +49,8 @@ export default async function handler(req, res) {
       },
       quantity: item.quantity || 1
     })),
-    success_url: successUrl || `${req.headers.origin || ''}/flowers/thank-you?session_id={CHECKOUT_SESSION_ID}`,
-    cancel_url: cancelUrl || `${req.headers.origin || ''}/flowers/shop`
+    success_url: successUrl || `${origin}/thank-you?session_id={CHECKOUT_SESSION_ID}`,
+    cancel_url: cancelUrl || `${origin}/shop`
   };
 
   if (customerEmail) sessionConfig.customer_email = customerEmail;

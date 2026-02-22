@@ -3,8 +3,8 @@
  * Stores in Supabase table bb35_contact_submissions when configured; otherwise returns success so the form can be tested.
  */
 
-import { getSupabase } from '../../lib/db.js';
-import { json, corsPreflight } from '../../lib/res.js';
+import { getSupabase } from '../lib/db.js';
+import { json, corsPreflight } from '../lib/res.js';
 
 export default async function handler(req, res) {
   if (req.method === 'OPTIONS') return corsPreflight(res);

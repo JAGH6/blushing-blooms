@@ -1,0 +1,11 @@
+{
+  "name": "blushing-blooms-35",
+  "version": "1.0.0",
+  "description": "Blushing Blooms — OKC metro florals",
+  "type": "module",
+  "engines": { "node": ">=18" },
+  "dependencies": {
+    "@supabase/supabase-js": "^2.45.0",
+    "stripe": "^14.0.0"
+  }
+}

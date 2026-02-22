@@ -5,7 +5,7 @@
 
 (function () {
   const STORAGE_KEY = 'blushing_blooms_35_cart';
-  const BASE = window.location.pathname.startsWith('/flowers') ? '/flowers' : '';
+  const BASE = '';
 
   function getCart() {
     try {
@@ -125,23 +125,23 @@
             return { name: i.name, price: i.price, image: i.image || '', quantity: i.quantity || 1 };
           });
           var origin = window.location.origin || '';
-          fetch(origin + '/api/blushing_blooms_35/create-checkout', {
+          fetch(origin + '/api/create-checkout', {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({
               lineItems: lineItems,
-              successUrl: origin + BASE + '/thank-you?session_id={CHECKOUT_SESSION_ID}',
-              cancelUrl: origin + BASE + '/shop'
+              successUrl: origin + '/thank-you?session_id={CHECKOUT_SESSION_ID}',
+              cancelUrl: origin + '/shop'
             })
           }).then(function (r) { return r.json().then(function (data) { return { ok: r.ok, data: data }; }); })
             .then(function (result) {
               if (result.ok && result.data.url) {
                 window.location.href = result.data.url;
               } else {
-                window.location.href = BASE + '/contact?from=cart';
+                window.location.href = '/contact?from=cart';
               }
             }).catch(function () {
-              window.location.href = BASE + '/contact?from=cart';
+              window.location.href = '/contact?from=cart';
             });
         });
       }

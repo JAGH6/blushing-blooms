@@ -3,8 +3,8 @@
  * Optional: requires STRIPE_WEBHOOK_SECRET. Records to Supabase bb35_orders when configured.
  */
 
-import { getSupabase } from '../../lib/db.js';
-import { json, corsPreflight } from '../../lib/res.js';
+import { getSupabase } from '../lib/db.js';
+import { json, corsPreflight } from '../lib/res.js';
 
 export const config = { api: { bodyParser: false } };
 

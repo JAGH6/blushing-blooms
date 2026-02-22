@@ -1,10 +1,10 @@
 /**
  * Blushing Blooms — shared nav, data loading, and utilities.
- * Base path is /flowers so links and fetches work on Vercel.
+ * When deployed with Root Directory = blushing_blooms_35, site is at root (no /flowers).
  */
 
 (function () {
-  const BASE = window.location.pathname.startsWith('/flowers') ? '/flowers' : '';
+  const BASE = '';
 
   /**
    * Renders the site header and nav; call after DOM ready.
