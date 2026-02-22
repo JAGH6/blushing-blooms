@@ -1,0 +1,11 @@
+{
+  "name": "tetris-family-competition",
+  "version": "1.0.0",
+  "description": "Tetris daily competition with leaderboard and SMS",
+  "type": "module",
+  "engines": { "node": ">=18" },
+  "dependencies": {
+    "@supabase/supabase-js": "^2.45.0",
+    "stripe": "^14.0.0"
+  }
+}

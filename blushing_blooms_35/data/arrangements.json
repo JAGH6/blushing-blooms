@@ -1,0 +1,50 @@
+[
+  {
+    "id": "blush-bouquet",
+    "name": "Blush Bouquet",
+    "description": "A soft, romantic mix of blush roses, eucalyptus, and seasonal blooms—perfect for any occasion.",
+    "price": 75,
+    "image": "https://images.unsplash.com/photo-1490750967868-88aa4486c946?w=600&h=600&fit=crop",
+    "featured": true
+  },
+  {
+    "id": "garden-gathering",
+    "name": "Garden Gathering",
+    "description": "Abundant garden-style arrangement with lush greens and a variety of textures and colors.",
+    "price": 95,
+    "image": "https://images.unsplash.com/photo-1518895312237-a9e23508077d?w=600&h=600&fit=crop",
+    "featured": true
+  },
+  {
+    "id": "modern-minimal",
+    "name": "Modern Minimal",
+    "description": "Clean lines and a curated selection of stems for a contemporary look.",
+    "price": 65,
+    "image": "https://images.unsplash.com/photo-1455659817273-f96807779a8a?w=600&h=600&fit=crop",
+    "featured": true
+  },
+  {
+    "id": "sunset-vibes",
+    "name": "Sunset Vibes",
+    "description": "Warm tones of coral, peach, and amber for a cozy, inviting feel.",
+    "price": 85,
+    "image": "https://images.unsplash.com/photo-1508610048659-a06b669e3321?w=600&h=600&fit=crop",
+    "featured": false
+  },
+  {
+    "id": "fresh-greens",
+    "name": "Fresh Greens",
+    "description": "Eucalyptus, ferns, and foliage-focused arrangement—elegant and long-lasting.",
+    "price": 55,
+    "image": "https://images.unsplash.com/photo-1582794543139-8ac9cb0f7b11?w=600&h=600&fit=crop",
+    "featured": false
+  },
+  {
+    "id": "celebration",
+    "name": "Celebration",
+    "description": "Bold and joyful mix for birthdays, anniversaries, or any reason to celebrate.",
+    "price": 110,
+    "image": "https://images.unsplash.com/photo-1563241527-3004b7be0ffd?w=600&h=600&fit=crop",
+    "featured": false
+  }
+]

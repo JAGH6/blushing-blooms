@@ -1,0 +1,56 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Thank you | Blushing Blooms</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,500;0,600;1,500&family=Nunito+Sans:ital,wght@0,400;0,600;0,700;1,400&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="/flowers/css/main.css">
+</head>
+<body>
+  <header class="site-header">
+    <div class="container">
+      <div class="logo"><a href="/flowers/">Blushing Blooms</a></div>
+      <button class="nav-toggle" aria-label="Menu"><span></span><span></span><span></span></button>
+      <nav class="nav">
+        <a href="/flowers/">Home</a>
+        <a href="/flowers/shop">Shop</a>
+        <a href="/flowers/schedule">Book</a>
+        <a href="/flowers/contact">Contact</a>
+        <a href="/flowers/gallery">Gallery</a>
+        <a href="https://www.instagram.com/blushing_blooms_35/" target="_blank" rel="noopener">Instagram</a>
+      </nav>
+    </div>
+  </header>
+
+  <main>
+    <section class="thank-you-block">
+      <div class="container">
+        <h1>Thank you</h1>
+        <p>We've received your order and will be in touch soon. For questions, <a href="/flowers/contact">contact us</a> or DM us on <a href="https://www.instagram.com/blushing_blooms_35/" target="_blank" rel="noopener">Instagram</a>.</p>
+        <a href="/flowers/shop" class="btn btn-primary">Continue shopping</a>
+      </div>
+    </section>
+  </main>
+
+  <footer class="site-footer">
+    <div class="container">
+      <div class="footer-instagram">
+        <a href="https://www.instagram.com/blushing_blooms_35/" target="_blank" rel="noopener">@blushing_blooms_35</a>
+      </div>
+      <p class="footer-areas">Oklahoma City · Norman · Edmond & surrounding areas</p>
+    </div>
+  </footer>
+
+  <script src="/flowers/js/main.js"></script>
+  <script>
+    (function () {
+      if (window.bb35Cart && window.location.search.indexOf('checkout=1') !== -1) {
+        window.bb35Cart.clearCart();
+      }
+    })();
+  </script>
+</body>
+</html>

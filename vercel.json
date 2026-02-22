@@ -1,0 +1,18 @@
+{
+  "rewrites": [
+    { "source": "/flowers", "destination": "/blushing_blooms_35/index.html" },
+    { "source": "/flowers/", "destination": "/blushing_blooms_35/index.html" },
+    { "source": "/flowers/shop", "destination": "/blushing_blooms_35/shop.html" },
+    { "source": "/flowers/schedule", "destination": "/blushing_blooms_35/schedule.html" },
+    { "source": "/flowers/contact", "destination": "/blushing_blooms_35/contact.html" },
+    { "source": "/flowers/gallery", "destination": "/blushing_blooms_35/gallery.html" },
+    { "source": "/flowers/thank-you", "destination": "/blushing_blooms_35/thank-you.html" },
+    { "source": "/flowers/:path*", "destination": "/blushing_blooms_35/:path*" }
+  ],
+  "crons": [
+    {
+      "path": "/api/cron/daily-sms",
+      "schedule": "0 20 * * *"
+    }
+  ]
+}

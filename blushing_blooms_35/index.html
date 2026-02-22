@@ -1,0 +1,154 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Blushing Blooms | Handcrafted Florals — Oklahoma City, Norman, Edmond</title>
+  <meta name="description" content="Blushing Blooms offers handcrafted floral arrangements in the OKC metro. Shop bouquets, book consultations, and order delivery in Oklahoma City, Norman, and Edmond.">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,500;0,600;1,500&family=Nunito+Sans:ital,wght@0,400;0,600;0,700;1,400&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="/flowers/css/main.css">
+</head>
+<body>
+  <header class="site-header">
+    <div class="container">
+      <div class="logo"><a href="/flowers/">Blushing Blooms</a></div>
+      <button class="nav-toggle" aria-label="Menu"><span></span><span></span><span></span></button>
+      <nav class="nav">
+        <a href="/flowers/">Home</a>
+        <a href="/flowers/shop">Shop</a>
+        <a href="/flowers/schedule">Book</a>
+        <a href="/flowers/contact">Contact</a>
+        <a href="/flowers/gallery">Gallery</a>
+        <a href="#" class="cart-link js-open-cart">Cart (<span id="bb35-cart-count" class="cart-count" data-count="0">0</span>)</a>
+        <a href="https://www.instagram.com/blushing_blooms_35/" target="_blank" rel="noopener">Instagram</a>
+      </nav>
+    </div>
+  </header>
+
+  <main>
+    <section class="hero" style="background-image: url('https://images.unsplash.com/photo-1490750967868-88aa4486c946?w=1200&h=800&fit=crop');">
+      <div class="container">
+        <h1>Blushing Blooms</h1>
+        <p class="tagline">Handcrafted florals for the Oklahoma City metro — Oklahoma City, Norman, Edmond & beyond.</p>
+        <a href="/flowers/shop" class="btn btn-primary">Shop Arrangements</a>
+        <a href="/flowers/schedule" class="btn btn-secondary" style="margin-left: 0.5rem;">Book a Consultation</a>
+      </div>
+    </section>
+
+    <section class="section" id="about">
+      <div class="container">
+        <div class="section-title">
+          <h2>About Us</h2>
+          <p>Meet the faces behind the blooms</p>
+        </div>
+        <p style="max-width: 640px; margin: 0 auto; text-align: center;">
+          Blushing Blooms is run by <strong>Aleisha Argo</strong> and <strong>Renee Garnand</strong>. We create intimate, elegant arrangements for every occasion — from everyday bouquets to events and consultations. We serve the Oklahoma City metro area with love and attention to detail.
+        </p>
+      </div>
+    </section>
+
+    <section class="section" id="featured">
+      <div class="container">
+        <div class="section-title">
+          <h2>Featured Arrangements</h2>
+          <p>Curated designs, ready to order</p>
+        </div>
+        <div class="card-grid" id="featured-grid">
+          <p style="text-align: center; color: var(--color-text-soft);">Loading…</p>
+        </div>
+        <p style="text-align: center; margin-top: 1.5rem;">
+          <a href="/flowers/shop" class="btn btn-primary">View All Arrangements</a>
+        </p>
+      </div>
+    </section>
+
+    <section class="section" id="instagram">
+      <div class="container">
+        <div class="section-title">
+          <h2>Follow Along</h2>
+          <p><a href="https://www.instagram.com/blushing_blooms_35/" target="_blank" rel="noopener">@blushing_blooms_35</a> — see our latest designs on Instagram</p>
+        </div>
+        <div class="gallery-grid" id="home-gallery"></div>
+        <p style="text-align: center; margin-top: 1.5rem;">
+          <a href="https://www.instagram.com/blushing_blooms_35/" target="_blank" rel="noopener" class="btn btn-secondary">See more on Instagram</a>
+        </p>
+      </div>
+    </section>
+  </main>
+
+  <footer class="site-footer">
+    <div class="container">
+      <div class="footer-instagram">
+        <a href="https://www.instagram.com/blushing_blooms_35/" target="_blank" rel="noopener">@blushing_blooms_35</a>
+      </div>
+      <p class="footer-areas">Oklahoma City · Norman · Edmond & surrounding areas</p>
+      <div class="footer-links">
+        <a href="/flowers/contact">Contact</a>
+        <a href="/flowers/shop">Shop</a>
+        <a href="/flowers/schedule">Book</a>
+      </div>
+    </div>
+  </footer>
+
+  <div id="bb35-cart-overlay" class="overlay" aria-hidden="true"></div>
+  <div id="bb35-cart-drawer" class="cart-drawer">
+    <div class="cart-drawer-header">
+      <h2 style="margin:0;">Your Cart</h2>
+      <button type="button" class="cart-drawer-close" aria-label="Close cart">&times;</button>
+    </div>
+    <div class="cart-drawer-body"></div>
+    <div class="cart-drawer-footer"></div>
+  </div>
+
+  <script src="/flowers/js/cart.js"></script>
+  <script src="/flowers/js/main.js"></script>
+  <script>
+    (function () {
+      var BASE = window.bb35 && window.bb35.BASE ? window.bb35.BASE : '/flowers';
+      function loadFeatured() {
+        fetch(BASE + '/data/arrangements.json').then(function (r) { return r.json(); }).then(function (arr) {
+          var featured = arr.filter(function (a) { return a.featured; }).slice(0, 3);
+          var grid = document.getElementById('featured-grid');
+          if (!grid) return;
+          grid.innerHTML = featured.map(function (a) {
+            return '<article class="card">' +
+              '<img class="card-image" src="' + (a.image || '') + '" alt="" loading="lazy">' +
+              '<div class="card-body">' +
+              '<h3>' + escapeHtml(a.name) + '</h3>' +
+              '<p>' + escapeHtml(a.description) + '</p>' +
+              '<p class="price">$' + Number(a.price).toFixed(2) + '</p>' +
+              '<button type="button" class="btn btn-primary js-add-cart" data-id="' + escapeHtml(a.id) + '" data-name="' + escapeHtml(a.name) + '" data-price="' + a.price + '" data-image="' + escapeHtml(a.image || '') + '">Add to cart</button>' +
+              '</div></article>';
+          }).join('');
+          grid.querySelectorAll('.js-add-cart').forEach(function (btn) {
+            btn.addEventListener('click', function () {
+              window.bb35Cart.addItem({
+                id: btn.dataset.id,
+                name: btn.dataset.name,
+                price: parseFloat(btn.dataset.price),
+                image: btn.dataset.image
+              });
+            });
+          });
+        }).catch(function () {
+          document.getElementById('featured-grid').innerHTML = '<p style="text-align:center; color: var(--color-text-soft);">Unable to load arrangements.</p>';
+        });
+      }
+      function loadGallery() {
+        fetch(BASE + '/data/gallery.json').then(function (r) { return r.json(); }).then(function (items) {
+          var el = document.getElementById('home-gallery');
+          if (!el) return;
+          el.innerHTML = items.slice(0, 6).map(function (i) {
+            return '<a href="' + (i.link || 'https://www.instagram.com/blushing_blooms_35/') + '" target="_blank" rel="noopener" class="gallery-item"><img src="' + i.src + '" alt="" loading="lazy"></a>';
+          }).join('');
+        });
+      }
+      function escapeHtml(s) { var d = document.createElement('div'); d.textContent = s; return d.innerHTML; }
+      if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', function () { loadFeatured(); loadGallery(); });
+      else { loadFeatured(); loadGallery(); }
+    })();
+  </script>
+</body>
+</html>

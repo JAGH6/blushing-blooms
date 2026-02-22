@@ -1,0 +1,135 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Tetris — Leaderboard & Stats</title>
+  <style>
+    * { box-sizing: border-box; }
+    body {
+      margin: 0;
+      min-height: 100vh;
+      background: #1a1a2e;
+      color: #eee;
+      font-family: system-ui, sans-serif;
+      padding: 1.5rem;
+    }
+    a { color: #4a9; }
+    h1 { margin: 0 0 1rem 0; font-size: 1.5rem; }
+    h2 { font-size: 1.1rem; color: #00f0f0; margin: 1.5rem 0 0.5rem 0; }
+    section { max-width: 480px; margin: 0 auto; }
+    ul { list-style: none; padding: 0; }
+    li { padding: 0.4rem 0; border-bottom: 1px solid #333; display: flex; justify-content: space-between; }
+    .rank { color: #00f0f0; margin-right: 0.5rem; }
+    .loading { color: #888; }
+  </style>
+</head>
+<body>
+  <section>
+    <h1><a href="index.html">Tetris</a> — Leaderboard & Stats</h1>
+    <h2>My stats</h2>
+    <ul id="my-stats" class="loading">Loading…</ul>
+    <h2>Today's leaderboard</h2>
+    <ul id="today-list" class="loading">Loading…</ul>
+    <h2>Today's notes (family journal)</h2>
+    <ul id="notes-list" class="loading">Loading…</ul>
+    <h2>Most daily wins (this week)</h2>
+    <ul id="week-list" class="loading">Loading…</ul>
+    <h2>Most daily wins (this month)</h2>
+    <ul id="month-list" class="loading">Loading…</ul>
+    <h2>Family milestones</h2>
+    <ul id="milestones-list" class="loading">Loading…</ul>
+    <p style="margin-top:2rem"><a href="tetris.html">Play Tetris</a> · <a href="live.html">Live scoreboard</a></p>
+  </section>
+  <script>
+    const API_BASE = window.API_BASE || '';
+    const token = localStorage.getItem('tetris_token');
+
+    async function api(path) {
+      const r = await fetch(API_BASE + path, {
+        headers: token ? { Authorization: 'Bearer ' + token } : {},
+      });
+      const text = await r.text();
+      try { return text ? JSON.parse(text) : null; } catch { return null; }
+    }
+
+    function formatTime(sec) {
+      const m = Math.floor(sec / 60);
+      const s = sec % 60;
+      return m + ':' + String(s).padStart(2, '0');
+    }
+
+    function renderToday(list) {
+      const el = document.getElementById('today-list');
+      el.classList.remove('loading');
+      if (!list || list.length === 0) { el.innerHTML = '<li>No scores yet today.</li>'; return; }
+      el.innerHTML = list.map((r, i) =>
+        '<li><span class="rank">' + (i + 1) + '.</span> ' + (r.displayName || 'Player') + ' <span>' + r.score + ' (' + formatTime(r.completionTimeSeconds) + ')</span></li>'
+      ).join('');
+    }
+
+    function renderWins(list, id) {
+      const el = document.getElementById(id);
+      el.classList.remove('loading');
+      if (!list || list.length === 0) { el.innerHTML = '<li>No data yet.</li>'; return; }
+      el.innerHTML = list.map((r, i) =>
+        '<li><span class="rank">' + (i + 1) + '.</span> ' + (r.displayName || 'Player') + ' <span>' + r.dailyWins + ' day(s)</span></li>'
+      ).join('');
+    }
+
+    function renderMyStats(data) {
+      const el = document.getElementById('my-stats');
+      el.classList.remove('loading');
+      if (!data) { el.innerHTML = '<li>Sign in to see your stats.</li>'; return; }
+      const items = [
+        'High score: ' + (data.highScore || 0),
+        'Average score: ' + (data.averageScore || 0),
+        'Current streak: ' + (data.currentStreak || 0) + ' day(s)',
+        'Longest streak: ' + (data.longestStreak || 0) + ' day(s)',
+      ];
+      if (data.achievements && data.achievements.length) items.push('Achievements: ' + data.achievements.map((a) => a.key).join(', '));
+      el.innerHTML = items.map((s) => '<li>' + s + '</li>').join('');
+    }
+
+    function renderNotes(notes) {
+      const el = document.getElementById('notes-list');
+      el.classList.remove('loading');
+      if (!notes || notes.length === 0) { el.innerHTML = '<li>No notes yet today.</li>'; return; }
+      el.innerHTML = notes.map((n) => '<li><strong>' + (n.displayName || 'Player') + '</strong>: ' + (n.noteText || '').replace(/</g, '&lt;') + '</li>').join('');
+    }
+
+    (async () => {
+      try {
+        const today = new Date().toISOString().slice(0, 10);
+        const [leaderboard, stats, myStats, notesData, milestonesData] = await Promise.all([
+          api('/api/leaderboard'),
+          api('/api/stats'),
+          token ? api('/api/me/stats') : Promise.resolve(null),
+          api('/api/notes?date=' + today),
+          api('/api/milestones'),
+        ]);
+        renderMyStats(myStats);
+        const msEl = document.getElementById('milestones-list');
+        if (msEl) {
+          msEl.classList.remove('loading');
+          const ms = (milestonesData && milestonesData.milestones) ? milestonesData.milestones : [];
+          msEl.innerHTML = ms.length ? ms.map((m) => '<li>Unlocked: ' + (m.key || '').replace(/_/g, ' ') + '</li>').join('') : '<li>No milestones unlocked yet.</li>';
+        }
+        if (leaderboard && leaderboard.leaderboard) renderToday(leaderboard.leaderboard);
+        else renderToday([]);
+        renderNotes(notesData && notesData.notes ? notesData.notes : []);
+        if (stats) {
+          renderWins(stats.mostDailyWinsThisWeek || [], 'week-list');
+          renderWins(stats.mostDailyWinsThisMonth || [], 'month-list');
+        } else {
+          renderWins([], 'week-list');
+          renderWins([], 'month-list');
+        }
+      } catch {
+        const ids = ['my-stats', 'today-list', 'notes-list', 'week-list', 'month-list', 'milestones-list'];
+        ids.forEach((id) => { const el = document.getElementById(id); if (el) { el.classList.remove('loading'); if (id === 'today-list') el.innerHTML = '<li>Could not load. Is the API running?</li>'; else el.innerHTML = '<li>—</li>'; } });
+      }
+    })();
+  </script>
+</body>
+</html>

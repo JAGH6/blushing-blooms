@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Tetris</title>
+  <title>Tetris — Family Competition</title>
   <style>
     * { box-sizing: border-box; }
     body {
@@ -17,20 +17,28 @@
       color: #eee;
       font-family: system-ui, sans-serif;
     }
-    h1 { margin: 0 0 0.5rem 0; font-size: 1.5rem; }
-    #score { margin-bottom: 0.5rem; font-size: 1.25rem; }
-    #game-over {
+    h1 { margin: 0 0 0.25rem 0; font-size: 1.5rem; }
+    #hud {
+      display: flex;
+      gap: 1.5rem;
+      margin-bottom: 0.5rem;
+      font-size: 1rem;
+      flex-wrap: wrap;
+      justify-content: center;
+    }
+    #game-over, #game-win {
       display: none;
       position: absolute;
-      background: rgba(0,0,0,0.85);
+      background: rgba(0,0,0,0.9);
       padding: 1.5rem 2rem;
       border-radius: 8px;
       text-align: center;
       z-index: 10;
     }
-    #game-over.show { display: block; }
-    #game-over p { margin: 0 0 1rem 0; font-size: 1.25rem; }
-    #restart {
+    #game-over.show, #game-win.show { display: block; }
+    #game-over p, #game-win p { margin: 0 0 0.5rem 0; font-size: 1.1rem; }
+    #game-win .final-score { font-size: 1.5rem; color: #4a9; margin: 0.5rem 0; }
+    #submit-score, #restart, #play-again {
       padding: 0.5rem 1.25rem;
       font-size: 1rem;
       cursor: pointer;
@@ -38,27 +46,287 @@
       border: none;
       border-radius: 4px;
       color: #fff;
+      margin: 0.25rem;
     }
-    #restart:hover { background: #5ba; }
+    #submit-score:hover, #restart:hover, #play-again:hover { background: #5ba; }
     .wrap { position: relative; }
     canvas {
       display: block;
       background: #0f0f1a;
       border: 2px solid #333;
     }
+    #level-flash {
+      position: absolute;
+      top: 50%;
+      left: 50%;
+      transform: translate(-50%, -50%);
+      font-size: 2rem;
+      font-weight: bold;
+      color: #00f0f0;
+      opacity: 0;
+      pointer-events: none;
+      z-index: 5;
+      text-shadow: 0 0 10px #00f0f0;
+    }
+    #level-flash.show {
+      animation: levelFlash 1s ease-out;
+    }
+    @keyframes levelFlash {
+      0% { opacity: 1; transform: translate(-50%, -50%) scale(1.2); }
+      100% { opacity: 0; transform: translate(-50%, -50%) scale(1.5); }
+    }
+    #music-hint { font-size: 0.75rem; color: #666; margin-top: 0.25rem; }
+    #gate {
+      position: fixed; inset: 0; background: #1a1a2e; z-index: 100;
+      display: flex; flex-direction: column; align-items: center; justify-content: center; padding: 1.5rem;
+    }
+    #gate.hidden { display: none; }
+    #signin-section, #already-played-section { text-align: center; max-width: 360px; }
+    #signin-section input { width: 100%; padding: 0.5rem; margin: 0.25rem 0; box-sizing: border-box; }
+    #signin-section button, #already-played-section button { margin: 0.25rem; padding: 0.5rem 1rem; cursor: pointer; }
+    #leaderboard-list { list-style: none; padding: 0; text-align: left; margin: 1rem 0; }
+    #leaderboard-list li { padding: 0.35rem 0; border-bottom: 1px solid #333; }
+    .leaderboard-rank { color: #00f0f0; margin-right: 0.5rem; }
   </style>
 </head>
 <body>
+  <div id="gate">
+    <div id="signin-section" class="hidden">
+      <h2>Sign in to play</h2>
+      <p style="font-size:0.9rem;color:#888">One game per day. We'll send a code to your email (free).</p>
+      <input type="email" id="email-or-phone" placeholder="Your email" />
+      <button id="send-code">Send code</button>
+      <div id="verify-block" class="hidden" style="margin-top:1rem">
+        <input type="text" id="code-input" placeholder="Enter 6-digit code" maxlength="6" />
+        <input type="text" id="display-name-input" placeholder="Display name (optional)" />
+        <button id="verify-code">Verify & play</button>
+      </div>
+      <p id="signin-error" style="color:#f66;font-size:0.85rem;margin-top:0.5rem"></p>
+    </div>
+    <div id="already-played-section" class="hidden">
+      <h2>You've already played today</h2>
+      <p style="color:#888">Come back tomorrow for another run!</p>
+      <p id="your-score-today" style="color:#8a8"></p>
+      <h3>Today's leaderboard</h3>
+      <ul id="leaderboard-list"></ul>
+      <div style="margin-top:1rem;text-align:left;max-width:320px">
+        <label for="daily-note" style="font-size:0.9rem">Leave a short note for today (family journal):</label>
+        <textarea id="daily-note" rows="2" style="width:100%;margin:0.25rem 0;padding:0.4rem;box-sizing:border-box;background:#2a2a3e;border:1px solid #444;color:#eee;border-radius:4px" placeholder="Optional reflection..."></textarea>
+        <button type="button" id="save-note-btn" style="padding:0.35rem 0.75rem;cursor:pointer;background:#4a9;border:none;color:#fff;border-radius:4px">Save note</button>
+        <span id="note-saved" class="hidden" style="margin-left:0.5rem;color:#8a8;font-size:0.85rem">Saved.</span>
+      </div>
+      <a href="stats.html" style="color:#4a9;display:inline-block;margin-top:0.5rem">View stats &amp; profile</a>
+    </div>
+    <div id="start-block" class="hidden">
+      <p id="welcome-msg">Hi, <span id="player-name"></span>!</p>
+      <button id="start-game-btn">Start today's game</button>
+    </div>
+    <div id="gate-loading">Checking…</div>
+  </div>
+
   <h1>Tetris</h1>
-  <div id="score">Score: 0</div>
+  <div id="hud">
+    <span id="score">Score: 0</span>
+    <span id="level-display">Level: 1</span>
+    <span id="lines-display">Lines to next: 10</span>
+    <span id="time-display">Time: 0:00</span>
+    <span id="theme-badge" class="hidden" style="color:#f0f000;font-size:0.85rem"></span>
+  </div>
+  <p id="music-hint">Press any key to start — music will begin</p>
   <div class="wrap">
     <canvas id="canvas" width="240" height="480"></canvas>
+    <div id="level-flash"></div>
     <div id="game-over">
       <p>Game Over</p>
-      <button id="restart">Restart</button>
+      <p id="go-score">Score: 0</p>
+      <p id="go-time">Time: 0:00</p>
+      <div id="trivia-block" class="hidden" style="margin:1rem 0;text-align:left;max-width:280px">
+        <p id="trivia-question" style="font-weight:bold;margin-bottom:0.5rem"></p>
+        <div id="trivia-options"></div>
+        <p id="trivia-result" class="hidden" style="margin-top:0.5rem;color:#8a8"></p>
+      </div>
+      <button id="submit-score">Submit score</button>
+      <button id="restart">Play again</button>
+    </div>
+    <div id="game-win">
+      <p>You beat the game!</p>
+      <p class="final-score" id="win-score">Score: 0</p>
+      <p id="win-time">Time: 0:00</p>
+      <div id="trivia-block-win" class="hidden" style="margin:1rem 0;text-align:left;max-width:280px">
+        <p id="trivia-question-win" style="font-weight:bold;margin-bottom:0.5rem"></p>
+        <div id="trivia-options-win"></div>
+        <p id="trivia-result-win" class="hidden" style="margin-top:0.5rem;color:#8a8"></p>
+      </div>
+      <button id="submit-win">Submit score</button>
+      <button id="play-again">Play again</button>
     </div>
   </div>
 
+  <audio id="bg-music" loop preload="auto">
+    <!-- Replace src with your own track; see README or use placeholder -->
+    <source src="assets/music.mp3" type="audio/mpeg">
+  </audio>
+  <audio id="level-up-sound" preload="auto">
+    <source src="assets/levelup.mp3" type="audio/mpeg">
+  </audio>
+
+  <script>
+    // --- Auth & API (runs first) ---
+    const API_BASE = window.API_BASE || '';
+    window.API_BASE = API_BASE;
+    const TOKEN_KEY = 'tetris_token';
+
+    function getToken() { return localStorage.getItem(TOKEN_KEY); }
+    function setToken(t) { if (t) localStorage.setItem(TOKEN_KEY, t); else localStorage.removeItem(TOKEN_KEY); }
+
+    async function api(method, path, body) {
+      const opts = { method, headers: {} };
+      const token = getToken();
+      if (token) opts.headers.Authorization = 'Bearer ' + token;
+      if (body && (method === 'POST' || method === 'PUT')) {
+        opts.headers['Content-Type'] = 'application/json';
+        opts.body = typeof body === 'string' ? body : JSON.stringify(body);
+      }
+      const r = await fetch(API_BASE + path, opts);
+      const text = await r.text();
+      let data;
+      try { data = text ? JSON.parse(text) : null; } catch { data = null; }
+      if (!r.ok) throw { status: r.status, data };
+      return data;
+    }
+
+    function showSection(id) {
+      ['signin-section', 'already-played-section', 'start-block', 'gate-loading'].forEach((s) => {
+        const el = document.getElementById(s);
+        if (el) el.classList.toggle('hidden', s !== id);
+      });
+    }
+
+    function showLeaderboard(list, yourScore) {
+      const ul = document.getElementById('leaderboard-list');
+      const yourEl = document.getElementById('your-score-today');
+      if (!ul) return;
+      ul.innerHTML = '';
+      if (list.length === 0) ul.innerHTML = '<li>No scores yet today.</li>';
+      else list.forEach((row) => {
+        const li = document.createElement('li');
+        const time = Math.floor(row.completionTimeSeconds / 60) + ':' + String(row.completionTimeSeconds % 60).padStart(2, '0');
+        li.innerHTML = '<span class="leaderboard-rank">' + row.rank + '.</span> ' + (row.displayName || 'Player') + ' — ' + row.score + ' (' + time + ')';
+        ul.appendChild(li);
+      });
+      if (yourEl && yourScore != null) yourEl.textContent = 'Your score today: ' + yourScore.score + ' (time: ' + Math.floor(yourScore.completionTimeSeconds / 60) + ':' + String(yourScore.completionTimeSeconds % 60).padStart(2, '0') + ')';
+    }
+
+    window.submitScoreToApi = async function(body) {
+      try {
+        const data = await api('POST', '/api/scores', body);
+        document.getElementById('gate').classList.remove('hidden');
+        showSection('already-played-section');
+        const yourScore = body.score;
+        const yourTime = body.completionTimeSeconds;
+        showLeaderboard(data.leaderboard || [], { score: yourScore, completionTimeSeconds: yourTime });
+        loadMyNote();
+        return true;
+      } catch (e) {
+        console.error(e);
+        if (e.status === 401) { setToken(null); showSection('signin-section'); }
+        return false;
+      }
+    };
+
+    async function initGate() {
+      const token = getToken();
+      if (!token) { showSection('signin-section'); return; }
+      let me;
+      try {
+        me = await api('GET', '/api/me');
+      } catch (e) {
+        if (e.status === 401) setToken(null);
+        showSection('signin-section');
+        return;
+      }
+      try {
+        const canPlay = await api('GET', '/api/can-play');
+        if (canPlay.canPlay) {
+          document.getElementById('player-name').textContent = (me && me.display_name) || 'Player';
+          showSection('start-block');
+        } else {
+          const leaderboard = await api('GET', '/api/leaderboard');
+          showLeaderboard(leaderboard.leaderboard || [], canPlay.alreadyPlayedToday);
+          showSection('already-played-section');
+          if (typeof loadMyNote === 'function') loadMyNote();
+        }
+      } catch {
+        document.getElementById('player-name').textContent = (me && me.display_name) || 'Player';
+        showSection('start-block');
+      }
+    }
+
+    document.getElementById('send-code').addEventListener('click', async () => {
+      const val = document.getElementById('email-or-phone').value.trim();
+      const errEl = document.getElementById('signin-error');
+      if (!val) { errEl.textContent = 'Enter your email'; return; }
+      if (!val.includes('@')) { errEl.textContent = 'Please enter a valid email address'; return; }
+      errEl.textContent = '';
+      try {
+        await api('POST', '/api/auth/request-code', { email: val });
+        document.getElementById('verify-block').classList.remove('hidden');
+        errEl.textContent = 'Code sent! Check your email.';
+        errEl.style.color = '#8a8';
+      } catch (e) {
+        errEl.textContent = (e.data && e.data.error) || 'Failed to send code';
+        errEl.style.color = '#f66';
+      }
+    });
+    document.getElementById('verify-code').addEventListener('click', async () => {
+      const email = document.getElementById('email-or-phone').value.trim();
+      const code = document.getElementById('code-input').value.trim();
+      const displayName = document.getElementById('display-name-input').value.trim();
+      const errEl = document.getElementById('signin-error');
+      if (!code) { errEl.textContent = 'Enter the code'; return; }
+      errEl.textContent = '';
+      try {
+        const data = await api('POST', '/api/auth/verify', {
+          email,
+          code,
+          display_name: displayName || undefined,
+        });
+        setToken(data.token);
+        document.getElementById('gate').classList.add('hidden');
+        if (window.startTetrisGame) window.startTetrisGame();
+        else document.getElementById('start-game-btn').click();
+      } catch (e) {
+        errEl.textContent = (e.data && e.data.error) || 'Invalid code';
+        errEl.style.color = '#f66';
+      }
+    });
+    document.getElementById('start-game-btn').addEventListener('click', () => {
+      document.getElementById('gate').classList.add('hidden');
+      if (window.startTetrisGame) window.startTetrisGame();
+    });
+
+    async function loadMyNote() {
+      try {
+        const data = await api('GET', '/api/notes?date=' + new Date().toISOString().slice(0, 10) + '&me=true');
+        const ta = document.getElementById('daily-note');
+        if (ta && data && data.myNote !== undefined) ta.value = data.myNote || '';
+      } catch (_) {}
+    }
+    document.getElementById('save-note-btn').addEventListener('click', async () => {
+      const ta = document.getElementById('daily-note');
+      const span = document.getElementById('note-saved');
+      if (!ta || !span) return;
+      try {
+        await api('POST', '/api/notes', { noteText: ta.value });
+        span.classList.remove('hidden');
+        setTimeout(() => span.classList.add('hidden'), 2000);
+      } catch (e) {
+        if (e.status === 401) setToken(null);
+      }
+    });
+
+    initGate().catch(() => showSection('signin-section'));
+  </script>
   <script>
     // --- Constants ---
     const COLS = 10;
@@ -66,30 +334,36 @@
     const BLOCK_SIZE = 24;
     const SPAWN_X = 3;
     const SPAWN_Y = 0;
-    const DROP_MS = 900;
+    const LINES_PER_LEVEL = 10;
+    const TOTAL_LEVELS = 10;
     const SCORE_PER_LINE = [0, 100, 300, 500, 800];
+    const LEVEL_COMPLETE_BONUS = 1000;
+    const BEAT_GAME_BONUS = 50000;
+    const SPEED_BONUS_MAX = 10000;
+    const SPEED_BONUS_PER_SECOND = 50;
+
+    window.themeMultiplier = 1;
+    function getDropMs(level) {
+      const speeds = [900, 750, 620, 500, 400, 320, 260, 220, 200, 200];
+      const base = speeds[Math.min(level - 1, speeds.length - 1)] || 200;
+      const mult = window.themeMultiplier || 1;
+      return Math.max(100, Math.round(base / mult));
+    }
 
     const COLORS = [
       null,
-      '#00f0f0', // I cyan
-      '#f0f000', // O yellow
-      '#a000f0', // T purple
-      '#00f000', // S green
-      '#f00000', // Z red
-      '#0000f0', // J blue
-      '#f0a000', // L orange
+      '#00f0f0', '#f0f000', '#a000f0', '#00f000', '#f00000', '#0000f0', '#f0a000',
     ];
 
-    // --- Shape data: 7 tetrominoes, 4 rotations each (4x4 matrix) ---
     const SHAPES = [
-      [], // index 0 unused
-      [[1,1,1,1],[0,0,0,0],[0,0,0,0],[0,0,0,0]], // I
-      [[1,1,0,0],[1,1,0,0],[0,0,0,0],[0,0,0,0]], // O
-      [[0,1,0,0],[1,1,1,0],[0,0,0,0],[0,0,0,0]], // T
-      [[0,1,1,0],[1,1,0,0],[0,0,0,0],[0,0,0,0]], // S
-      [[1,1,0,0],[0,1,1,0],[0,0,0,0],[0,0,0,0]], // Z
-      [[1,0,0,0],[1,1,1,0],[0,0,0,0],[0,0,0,0]], // J
-      [[0,0,1,0],[1,1,1,0],[0,0,0,0],[0,0,0,0]], // L
+      [],
+      [[1,1,1,1],[0,0,0,0],[0,0,0,0],[0,0,0,0]],
+      [[1,1,0,0],[1,1,0,0],[0,0,0,0],[0,0,0,0]],
+      [[0,1,0,0],[1,1,1,0],[0,0,0,0],[0,0,0,0]],
+      [[0,1,1,0],[1,1,0,0],[0,0,0,0],[0,0,0,0]],
+      [[1,1,0,0],[0,1,1,0],[0,0,0,0],[0,0,0,0]],
+      [[1,0,0,0],[1,1,1,0],[0,0,0,0],[0,0,0,0]],
+      [[0,0,1,0],[1,1,1,0],[0,0,0,0],[0,0,0,0]],
     ];
 
     function rotateMatrix(matrix) {
@@ -108,42 +382,101 @@
     }
 
     // --- State ---
-    let grid;
-    let currentPiece;
-    let score;
-    let gameOver;
-    let dropTimer;
+    let grid, currentPiece, score, gameOver, gameWon, dropTimer;
+    let totalLinesCleared = 0;
+    let level = 1;
+    let gameStartTime = 0;
+    let dropIntervalMs = 900;
 
     const canvas = document.getElementById('canvas');
     const ctx = canvas.getContext('2d');
     const scoreEl = document.getElementById('score');
+    const levelEl = document.getElementById('level-display');
+    const linesEl = document.getElementById('lines-display');
+    const timeEl = document.getElementById('time-display');
     const gameOverEl = document.getElementById('game-over');
+    const gameWinEl = document.getElementById('game-win');
     const restartBtn = document.getElementById('restart');
+    const playAgainBtn = document.getElementById('play-again');
+    const submitScoreBtn = document.getElementById('submit-score');
+    const submitWinBtn = document.getElementById('submit-win');
+    const levelFlashEl = document.getElementById('level-flash');
+    const bgMusic = document.getElementById('bg-music');
+    const levelUpSound = document.getElementById('level-up-sound');
 
     function initGrid() {
       grid = Array(ROWS).fill(0).map(() => Array(COLS).fill(0));
     }
 
+    function getLinesToNextLevel() {
+      const linesInLevel = totalLinesCleared % LINES_PER_LEVEL;
+      return LINES_PER_LEVEL - linesInLevel;
+    }
+
+    function updateLevelDisplay() {
+      levelEl.textContent = 'Level: ' + level;
+      if (gameWon) linesEl.textContent = 'Complete!';
+      else linesEl.textContent = 'Lines to next: ' + getLinesToNextLevel();
+    }
+
+    function showLevelUpFlash() {
+      levelFlashEl.textContent = 'Level ' + level + '!';
+      levelFlashEl.classList.remove('show');
+      levelFlashEl.offsetHeight;
+      levelFlashEl.classList.add('show');
+      setTimeout(() => levelFlashEl.classList.remove('show'), 1000);
+      if (levelUpSound && levelUpSound.src) levelUpSound.play().catch(() => {});
+    }
+
+    async function applyWeeklyTheme() {
+      try {
+        const r = await fetch((window.API_BASE || '') + '/api/themes/current');
+        const data = r.ok ? await r.json() : null;
+        if (data && data.theme && data.theme.config && data.theme.config.gravityMultiplier) {
+          window.themeMultiplier = Number(data.theme.config.gravityMultiplier) || 1;
+          const badge = document.getElementById('theme-badge');
+          if (badge && data.theme.label) { badge.textContent = data.theme.label; badge.classList.remove('hidden'); }
+        }
+      } catch (_) {}
+    }
     function reset() {
+      applyWeeklyTheme();
       initGrid();
       score = 0;
+      totalLinesCleared = 0;
+      level = 1;
       gameOver = false;
+      gameWon = false;
+      gameStartTime = Date.now();
+      dropIntervalMs = getDropMs(1);
       scoreEl.textContent = 'Score: 0';
+      updateLevelDisplay();
+      updateTimeDisplay();
       gameOverEl.classList.remove('show');
+      gameWinEl.classList.remove('show');
       spawn();
       draw();
       if (dropTimer) clearInterval(dropTimer);
-      dropTimer = setInterval(tick, DROP_MS);
+      dropTimer = setInterval(tick, dropIntervalMs);
     }
 
-    // --- Collision ---
+    function updateTimeDisplay() {
+      const elapsed = Math.floor((Date.now() - gameStartTime) / 1000);
+      const m = Math.floor(elapsed / 60);
+      const s = elapsed % 60;
+      timeEl.textContent = 'Time: ' + m + ':' + (s < 10 ? '0' : '') + s;
+    }
+
+    function getCompletionTimeSeconds() {
+      return Math.floor((Date.now() - gameStartTime) / 1000);
+    }
+
     function canPlace(piece, px, py) {
       const matrix = getShapeMatrix(piece.shapeId, piece.rotation);
       for (let r = 0; r < 4; r++) {
         for (let c = 0; c < 4; c++) {
           if (!matrix[r][c]) continue;
-          const nx = px + c;
-          const ny = py + r;
+          const nx = px + c, ny = py + r;
           if (nx < 0 || nx >= COLS || ny >= ROWS) return false;
           if (ny >= 0 && grid[ny][nx]) return false;
         }
@@ -151,36 +484,35 @@
       return true;
     }
 
-    // --- Spawn ---
     function spawn() {
       const shapeId = 1 + Math.floor(Math.random() * 7);
-      currentPiece = {
-        shapeId,
-        x: SPAWN_X,
-        y: SPAWN_Y,
-        rotation: 0,
-      };
+      currentPiece = { shapeId, x: SPAWN_X, y: SPAWN_Y, rotation: 0 };
       if (!canPlace(currentPiece, currentPiece.x, currentPiece.y)) {
         gameOver = true;
         gameOverEl.classList.add('show');
+        document.getElementById('go-score').textContent = 'Score: ' + score;
+        document.getElementById('go-time').textContent = 'Time: ' + formatTime(getCompletionTimeSeconds());
         if (dropTimer) clearInterval(dropTimer);
+        setTimeout(() => { if (window.showTriviaForOverlay) window.showTriviaForOverlay('game-over'); }, 100);
       }
     }
 
-    // --- Lock ---
+    function formatTime(sec) {
+      const m = Math.floor(sec / 60);
+      const s = sec % 60;
+      return m + ':' + (s < 10 ? '0' : '') + s;
+    }
+
     function lock() {
       const matrix = getShapeMatrix(currentPiece.shapeId, currentPiece.rotation);
       const color = currentPiece.shapeId;
       for (let r = 0; r < 4; r++) {
         for (let c = 0; c < 4; c++) {
           if (!matrix[r][c]) continue;
-          const gy = currentPiece.y + r;
-          const gx = currentPiece.x + c;
-          if (gy >= 0 && gy < ROWS && gx >= 0 && gx < COLS)
-            grid[gy][gx] = color;
+          const gy = currentPiece.y + r, gx = currentPiece.x + c;
+          if (gy >= 0 && gy < ROWS && gx >= 0 && gx < COLS) grid[gy][gx] = color;
         }
       }
-      // Clear full rows (from bottom)
       let cleared = 0;
       for (let row = ROWS - 1; row >= 0; row--) {
         if (grid[row].every(cell => cell !== 0)) {
@@ -192,13 +524,42 @@
       }
       if (cleared > 0) {
         score += SCORE_PER_LINE[cleared] || 0;
+        totalLinesCleared += cleared;
+        const prevLevel = level;
+        level = Math.min(TOTAL_LEVELS, Math.floor(totalLinesCleared / LINES_PER_LEVEL) + 1);
+        if (level > prevLevel) {
+          score += LEVEL_COMPLETE_BONUS * prevLevel;
+          showLevelUpFlash();
+          if (level <= TOTAL_LEVELS) {
+            dropIntervalMs = getDropMs(level);
+            if (dropTimer) {
+              clearInterval(dropTimer);
+              dropTimer = setInterval(tick, dropIntervalMs);
+            }
+          }
+        }
+        if (level === TOTAL_LEVELS && totalLinesCleared >= TOTAL_LEVELS * LINES_PER_LEVEL) {
+          gameWon = true;
+          const sec = getCompletionTimeSeconds();
+          score += BEAT_GAME_BONUS;
+          score += Math.max(0, SPEED_BONUS_MAX - sec * SPEED_BONUS_PER_SECOND);
+          if (dropTimer) { clearInterval(dropTimer); dropTimer = null; }
+          scoreEl.textContent = 'Score: ' + score;
+          gameWinEl.classList.add('show');
+          document.getElementById('win-score').textContent = 'Score: ' + score;
+          document.getElementById('win-time').textContent = 'Time: ' + formatTime(sec);
+          setTimeout(() => { if (window.showTriviaForOverlay) window.showTriviaForOverlay('game-win'); }, 100);
+          return;
+        }
         scoreEl.textContent = 'Score: ' + score;
+        updateLevelDisplay();
       }
       spawn();
     }
 
     function tick() {
-      if (gameOver) return;
+      if (gameOver || gameWon) return;
+      updateTimeDisplay();
       if (canPlace(currentPiece, currentPiece.x, currentPiece.y + 1)) {
         currentPiece.y++;
       } else {
@@ -207,26 +568,24 @@
       draw();
     }
 
-    // --- Controls ---
     document.addEventListener('keydown', (e) => {
-      if (gameOver) return;
+      if (bgMusic.paused && ['ArrowLeft','ArrowRight','ArrowDown','ArrowUp'].includes(e.key)) {
+        bgMusic.play().catch(() => {});
+      }
+      if (gameOver || gameWon) return;
       switch (e.key) {
         case 'ArrowLeft':
           e.preventDefault();
-          if (canPlace(currentPiece, currentPiece.x - 1, currentPiece.y))
-            currentPiece.x--;
+          if (canPlace(currentPiece, currentPiece.x - 1, currentPiece.y)) currentPiece.x--;
           break;
         case 'ArrowRight':
           e.preventDefault();
-          if (canPlace(currentPiece, currentPiece.x + 1, currentPiece.y))
-            currentPiece.x++;
+          if (canPlace(currentPiece, currentPiece.x + 1, currentPiece.y)) currentPiece.x++;
           break;
         case 'ArrowDown':
           e.preventDefault();
           if (canPlace(currentPiece, currentPiece.x, currentPiece.y + 1)) {
             currentPiece.y++;
-            score += 1;
-            scoreEl.textContent = 'Score: ' + score;
           } else {
             lock();
           }
@@ -235,21 +594,82 @@
           e.preventDefault();
           const nextRot = (currentPiece.rotation + 1) % 4;
           const rotated = { ...currentPiece, rotation: nextRot };
-          if (canPlace(rotated, currentPiece.x, currentPiece.y))
-            currentPiece.rotation = nextRot;
+          if (canPlace(rotated, currentPiece.x, currentPiece.y)) currentPiece.rotation = nextRot;
           break;
       }
       draw();
     });
 
-    restartBtn.addEventListener('click', reset);
+    function getFinalScoreAndTime() {
+      const completionTimeSeconds = getCompletionTimeSeconds();
+      return { score, completionTimeSeconds, levelReached: level };
+    }
 
-    // --- Draw ---
+    let triviaData = { question: null, selectedText: null, bonus: 0 };
+
+    async function showTriviaForOverlay(overlay) {
+      const block = overlay === 'game-over' ? document.getElementById('trivia-block') : document.getElementById('trivia-block-win');
+      const qEl = overlay === 'game-over' ? document.getElementById('trivia-question') : document.getElementById('trivia-question-win');
+      const optsEl = overlay === 'game-over' ? document.getElementById('trivia-options') : document.getElementById('trivia-options-win');
+      const resEl = overlay === 'game-over' ? document.getElementById('trivia-result') : document.getElementById('trivia-result-win');
+      const API_BASE = window.API_BASE || '';
+      triviaData = { question: null, selectedText: null, bonus: 0 };
+      try {
+        const r = await fetch(API_BASE + '/api/trivia/today');
+        const data = r.ok ? await r.json() : null;
+        if (data && data.question && data.question.options && data.question.options.length >= 6) {
+          triviaData.question = data.question;
+          block.classList.remove('hidden');
+          qEl.textContent = data.question.questionText;
+          optsEl.innerHTML = '';
+          data.question.options.forEach((opt) => {
+            const btn = document.createElement('button');
+            btn.textContent = opt;
+            btn.type = 'button';
+            btn.style.cssText = 'display:block;width:100%;margin:0.25rem 0;padding:0.4rem;cursor:pointer;text-align:left;background:#2a2a3e;border:1px solid #444;color:#eee;border-radius:4px';
+            btn.addEventListener('click', () => {
+              if (triviaData.selectedText !== null) return;
+              triviaData.selectedText = opt;
+              resEl.textContent = 'Answer recorded. Click Submit score.';
+              resEl.style.color = '#8a8';
+              resEl.classList.remove('hidden');
+              [].forEach.call(optsEl.querySelectorAll('button'), (b) => { b.disabled = true; });
+            });
+            optsEl.appendChild(btn);
+          });
+          return;
+        }
+      } catch (_) {}
+      block.classList.add('hidden');
+    }
+
+    async function doSubmit() {
+      const { completionTimeSeconds, levelReached } = getFinalScoreAndTime();
+      const body = { score, completionTimeSeconds, levelReached };
+      if (triviaData.selectedText !== null) body.selectedOptionText = triviaData.selectedText;
+      if (window.submitScoreToApi) {
+        const ok = await window.submitScoreToApi(body);
+        if (ok) return;
+      }
+      let s = score;
+      try {
+        localStorage.setItem('tetris_last_score', JSON.stringify({ score: s, completionTimeSeconds, levelReached }));
+      } catch (_) {}
+      alert('Score: ' + s + ' | Time: ' + formatTime(completionTimeSeconds) + ' | Level: ' + levelReached + (window.submitScoreToApi ? '\n(Backend unavailable – score saved locally)' : ''));
+    }
+
+    window.showTriviaForOverlay = showTriviaForOverlay;
+
+    submitScoreBtn.addEventListener('click', doSubmit);
+    submitWinBtn.addEventListener('click', doSubmit);
+    restartBtn.addEventListener('click', () => { document.getElementById('gate').classList.add('hidden'); reset(); });
+    playAgainBtn.addEventListener('click', () => { document.getElementById('gate').classList.add('hidden'); reset(); });
+
+    window.startTetrisGame = function() { reset(); };
+
     function draw() {
       ctx.fillStyle = '#0f0f1a';
       ctx.fillRect(0, 0, canvas.width, canvas.height);
-
-      // Grid
       for (let row = 0; row < ROWS; row++) {
         for (let col = 0; col < COLS; col++) {
           const color = grid[row][col];
@@ -260,9 +680,7 @@
           ctx.strokeRect(col * BLOCK_SIZE, row * BLOCK_SIZE, BLOCK_SIZE, BLOCK_SIZE);
         }
       }
-
-      // Current piece
-      if (currentPiece && !gameOver) {
+      if (currentPiece && !gameOver && !gameWon) {
         const matrix = getShapeMatrix(currentPiece.shapeId, currentPiece.rotation);
         ctx.fillStyle = COLORS[currentPiece.shapeId];
         for (let r = 0; r < 4; r++) {
@@ -278,8 +696,12 @@
       }
     }
 
-    // --- Start ---
-    reset();
+    // Start only when gate allows (startTetrisGame called); otherwise canvas stays empty
+    if (!document.getElementById('gate').classList.contains('hidden')) {
+      // Gate visible: wait for Start or Verify to call startTetrisGame
+    } else {
+      reset();
+    }
   </script>
 </body>
 </html>

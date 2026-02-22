@@ -1,0 +1,54 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Tetris — Live Scoreboard</title>
+  <style>
+    * { box-sizing: border-box; }
+    body { margin: 0; min-height: 100vh; background: #1a1a2e; color: #eee; font-family: system-ui, sans-serif; padding: 1.5rem; }
+    h1 { margin: 0 0 0.5rem 0; font-size: 1.75rem; }
+    .sub { color: #888; font-size: 0.9rem; margin-bottom: 1rem; }
+    ul { list-style: none; padding: 0; margin: 0; }
+    li { padding: 0.6rem 0.75rem; border-bottom: 1px solid #333; display: flex; justify-content: space-between; align-items: center; font-size: 1.1rem; }
+    li:nth-child(1) { background: rgba(0,240,240,0.1); }
+    li:nth-child(2) { background: rgba(0,240,240,0.06); }
+    li:nth-child(3) { background: rgba(0,240,240,0.04); }
+    .rank { color: #00f0f0; font-weight: bold; margin-right: 0.5rem; min-width: 2rem; }
+    section { max-width: 420px; margin: 0 auto; }
+  </style>
+</head>
+<body>
+  <section>
+    <h1>Tetris — Live Scoreboard</h1>
+    <p class="sub">Updates every 10 seconds. Leave this open on a shared screen.</p>
+    <ul id="list">Loading…</ul>
+  </section>
+  <script>
+    const API_BASE = window.API_BASE || '';
+    function formatTime(sec) {
+      const m = Math.floor(sec / 60);
+      const s = sec % 60;
+      return m + ':' + String(s).padStart(2, '0');
+    }
+    async function refresh() {
+      try {
+        const r = await fetch(API_BASE + '/api/leaderboard');
+        const data = r.ok ? await r.json() : null;
+        const list = document.getElementById('list');
+        if (!data || !data.leaderboard || data.leaderboard.length === 0) {
+          list.innerHTML = '<li>No scores yet today.</li>';
+          return;
+        }
+        list.innerHTML = data.leaderboard.map((row, i) =>
+          '<li><span class="rank">' + (i + 1) + '.</span> ' + (row.displayName || 'Player') + ' <span>' + row.score + ' (' + formatTime(row.completionTimeSeconds) + ')</span></li>'
+        ).join('');
+      } catch {
+        document.getElementById('list').innerHTML = '<li>Could not load.</li>';
+      }
+    }
+    refresh();
+    setInterval(refresh, 10000);
+  </script>
+</body>
+</html>

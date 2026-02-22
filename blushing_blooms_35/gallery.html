@@ -1,0 +1,90 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Gallery | Blushing Blooms — OKC Florals</title>
+  <meta name="description" content="See Blushing Blooms' latest floral arrangements. Curated gallery — follow @blushing_blooms_35 on Instagram for more.">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,500;0,600;1,500&family=Nunito+Sans:ital,wght@0,400;0,600;0,700;1,400&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="/flowers/css/main.css">
+</head>
+<body>
+  <header class="site-header">
+    <div class="container">
+      <div class="logo"><a href="/flowers/">Blushing Blooms</a></div>
+      <button class="nav-toggle" aria-label="Menu"><span></span><span></span><span></span></button>
+      <nav class="nav">
+        <a href="/flowers/">Home</a>
+        <a href="/flowers/shop">Shop</a>
+        <a href="/flowers/schedule">Book</a>
+        <a href="/flowers/contact">Contact</a>
+        <a href="/flowers/gallery">Gallery</a>
+        <a href="#" class="cart-link js-open-cart">Cart (<span id="bb35-cart-count" class="cart-count" data-count="0">0</span>)</a>
+        <a href="https://www.instagram.com/blushing_blooms_35/" target="_blank" rel="noopener">Instagram</a>
+      </nav>
+    </div>
+  </header>
+
+  <main>
+    <section class="section">
+      <div class="container">
+        <div class="section-title">
+          <h1>Gallery</h1>
+          <p>Follow <a href="https://www.instagram.com/blushing_blooms_35/" target="_blank" rel="noopener">@blushing_blooms_35</a> on Instagram for our freshest designs.</p>
+        </div>
+        <div class="gallery-grid" id="gallery-grid">
+          <p style="text-align: center; color: var(--color-text-soft);">Loading…</p>
+        </div>
+        <p style="text-align: center; margin-top: 1.5rem;">
+          <a href="https://www.instagram.com/blushing_blooms_35/" target="_blank" rel="noopener" class="btn btn-primary">See more on Instagram</a>
+        </p>
+      </div>
+    </section>
+  </main>
+
+  <footer class="site-footer">
+    <div class="container">
+      <div class="footer-instagram">
+        <a href="https://www.instagram.com/blushing_blooms_35/" target="_blank" rel="noopener">@blushing_blooms_35</a>
+      </div>
+      <p class="footer-areas">Oklahoma City · Norman · Edmond & surrounding areas</p>
+      <div class="footer-links">
+        <a href="/flowers/contact">Contact</a>
+        <a href="/flowers/shop">Shop</a>
+        <a href="/flowers/schedule">Book</a>
+      </div>
+    </div>
+  </footer>
+
+  <div id="bb35-cart-overlay" class="overlay" aria-hidden="true"></div>
+  <div id="bb35-cart-drawer" class="cart-drawer">
+    <div class="cart-drawer-header">
+      <h2 style="margin:0;">Your Cart</h2>
+      <button type="button" class="cart-drawer-close" aria-label="Close cart">&times;</button>
+    </div>
+    <div class="cart-drawer-body"></div>
+    <div class="cart-drawer-footer"></div>
+  </div>
+
+  <script src="/flowers/js/cart.js"></script>
+  <script src="/flowers/js/main.js"></script>
+  <script>
+    (function () {
+      var BASE = window.bb35 && window.bb35.BASE ? window.bb35.BASE : '/flowers';
+      fetch(BASE + '/data/gallery.json').then(function (r) { return r.json(); }).then(function (items) {
+        var el = document.getElementById('gallery-grid');
+        if (!el) return;
+        el.innerHTML = items.map(function (i) {
+          var link = i.link || 'https://www.instagram.com/blushing_blooms_35/';
+          return '<a href="' + link + '" target="_blank" rel="noopener" class="gallery-item" title="' + escapeHtml(i.caption || '') + '"><img src="' + i.src + '" alt="' + escapeHtml(i.caption || '') + '" loading="lazy"></a>';
+        }).join('');
+      }).catch(function () {
+        document.getElementById('gallery-grid').innerHTML = '<p style="text-align:center; color: var(--color-text-soft);">Unable to load gallery.</p>';
+      });
+      function escapeHtml(s) { var d = document.createElement('div'); d.textContent = s; return d.innerHTML; }
+    })();
+  </script>
+</body>
+</html>
